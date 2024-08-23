@@ -1,29 +1,33 @@
-<script>
-    const imgs = document.getElementsByTagName("img");
-    const lazyImg1 = () => {
-        window.addEventListener("scroll", () => {
-            [...imgs].forEach(image => {
-                const top = image.getBoundingClientRect().top;
-                if (top < window.innerHeight) {
-                    const data_src = image.getAttribute("data-src");
-                    image.setAttribute("src", data_src);
-                }
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        const imgs = document.getElementsByTagName("img");
+        const lazyImg1 = () => {
+            window.addEventListener("scroll", () => {
+                [...imgs].forEach(image => {
+                    const top = image.getBoundingClientRect().top;
+                    if (top < window.innerHeight) {
+                        const data_src = image.getAttribute("data-src");
+                        image.setAttribute("src", data_src);
+                    }
+                })
             })
-        })
-    };
-    lazyImg1();
-</script>
-<style>
-    body {
-        display: flex;
-        flex-direction: column;
-    }
+        };
+        lazyImg1();
+    </script>
+    <style>
+        body {
+            padding: 10px;
+        }
 
-    p {
-        word-wrap: break-word;
-        max-width: 100%;
-    }
-</style>
+        h1, h2, p {
+            word-wrap: break-word;
+            max-width: 100%;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
 
 <body>
     <h1>影神图</h1>
