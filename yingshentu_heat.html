@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>《黑神话：悟空》角色关系图</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    <script src="https://unpkg.com/compromise@13.11.0/builds/compromise.min.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+      /* 设置图表容器宽度为100% */
+      #main {
+        width: 100%;
+        height: 100vh; /* 使用视口高度 */
+      }
+    </style>
+  </head>
+  <body>
+    <div id="main"></div>
+    <script>
+      const url = "yingshentu_with_heat.json"; // 本地文件路径
+
+      fetch(url)
+        .then((response) => response.json())
+        .then((data) => {
+          const nodes = [];
+          const links = [];
+
+          // 假设热度值在数据中范围是 0-100
+          const colorScale = d3
+            .scaleLinear()
+            .domain([0, 10]) // 假设热度值范围
+            .range(["green", "red"]); // 从绿色到红色渐变
+
+          // 计算角色出现次数
+          const occurrenceCount = {};
+
+          // 初始化每个角色的计数为 0
+          for (const key in data) {
+            const name = data[key].Name;
+            occurrenceCount[name] = data[key].Heat; // 使用热度值
+          }
+
+          // 遍历角色，构建节点和边
+          for (const key in data) {
+            const name = data[key].Name;
+            const description = data[key].UnitStory || "无介绍"; // 假设有一个描述字段
+            const heat = occurrenceCount[name]; // 使用出现次数作为热度值
+            nodes.push({
+              name,
+              description,
+              itemStyle: {
+                color: colorScale(heat), // 根据热度值设置颜色
+              },
+            });
+
+            for (const otherKey in data) {
+              if (otherKey !== key && data[otherKey].UnitStory.includes(name)) {
+                links.push({ source: name, target: data[otherKey].Name });
+              }
+            }
+          }
+
+          // 初始化 ECharts
+          const chartDom = document.getElementById("main");
+          const myChart = echarts.init(chartDom);
+
+          const option = {
+            title: {
+              text: "《黑神话：悟空》角色关系图",
+              left: "center",
+            },
+            tooltip: {},
+            animation: false,
+            series: [
+              {
+                type: "graph",
+                layout: "force",
+                data: nodes,
+                links: links,
+                roam: true,
+                label: {
+                  show: true,
+                  position: "inside", // 标签位置
+                  formatter: function (params) {
+                    return `${params.data.name}`; // 显示角色名称
+                  },
+                },
+                force: {
+                  repulsion: 100,
+                },
+                lineStyle: {
+                  color: "source",
+                  curveness: 0,
+                },
+              },
+            ],
+          };
+
+          // 使用指定的配置项和数据显示图表
+          myChart.setOption(option);
+
+          // 点击事件和窗口大小变化的监听
+          myChart.on("click", function (params) {
+            if (params.data && params.data.description) {
+              const formattedDescription = params.data.description.replace(
+                /\n/g,
+                "<br>"
+              );
+
+              // 找到对应角色的 pic_key
+              const pic_key = Object.keys(data).find(
+                (key) => data[key].Name === params.data.name
+              );
+
+              Swal.fire({
+                title: params.data.name,
+                html: `
+                        <div style="display: flex; align-items: flex-start;">
+                            <img src="https://raw.githubusercontent.com/STDquantum/yingshentu/refs/heads/main/result_comp/${pic_key}_${params.data.name}.png" style="height: 350px; margin-right: 10px;" />
+                            <div style="max-height: 300px; overflow-y: auto; width: 500px; text-align: left;">${formattedDescription}</div>
+                        </div>
+                    `,
+                confirmButtonText: "关闭",
+                width: "800px",
+              });
+            }
+          });
+
+          // 监听窗口大小变化
+          window.addEventListener("resize", function () {
+            myChart.resize();
+          });
+        })
+        .catch((error) => console.error("Error fetching data:", error));
+    </script>
+  </body>
+</html>
