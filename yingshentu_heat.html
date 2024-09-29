@@ -35,25 +35,35 @@
         .then((data) => {
           const nodes = [];
           const links = [];
+          const edgeSymbol = [];
 
-          // 假设热度值在数据中范围是 0-100
-          const colorScale = d3
-            .scaleLinear()
-            .domain([0, 15]) // 假设热度值范围
-            .range(["green", "red"]); // 从绿色到红色渐变
+          // 根据分类设置颜色
+          const getColorByCategory = (category) => {
+            switch (category) {
+              case "小妖":
+                return "grey";
+              case "头目":
+                return "orange";
+              case "妖王":
+                return "red";
+              case "人物":
+                return "green";
+            }
+          };
 
           // 遍历角色，构建节点和边
           for (const key in data) {
             const name = data[key].Name;
             const description = data[key].UnitStory || "无介绍"; // 假设有一个描述字段
             const Poetry = data[key].Poetry;
-            const heat = data[key].heat; // 使用热度值
+            const category = data[key].category; // 读取类别
             nodes.push({
               name,
               Poetry,
+              category,
               description,
               itemStyle: {
-                color: colorScale(heat), // 根据热度值设置颜色
+                color: getColorByCategory(category), // 根据类别设置颜色
               },
             });
           }
@@ -61,15 +71,11 @@
           // 根据 related_to 和 related_from 构建边
           for (const key in data) {
             const currentName = data[key].Name;
-            const relatedTo = Array.isArray(data[key].related_to)
-              ? data[key].related_to
-              : []; // 确保是数组
-            const relatedFrom = Array.isArray(data[key].related_from)
-              ? data[key].related_from
-              : []; // 确保是数组
+            const relatedTo = data[key].related_to || [];
+            const relatedFrom = data[key].related_from || [];
 
-            // 单向箭头（指向）
-            for (const target of relatedTo) {
+            // 控制连线
+            for (const target of relatedFrom) {
               links.push({
                 source: currentName,
                 target: target,
@@ -77,19 +83,12 @@
               });
             }
 
-            // 双向箭头（彼此提及）
-            for (const target of relatedFrom) {
-              if (
-                data[target] &&
-                Array.isArray(data[target].related_to) &&
-                data[target].related_to.includes(currentName)
-              ) {
-                links.push({
-                  source: currentName,
-                  target: target,
-                  lineStyle: { type: "solid" },
-                });
-              }
+            for (const target of relatedTo) {
+              links.push({
+                source: currentName,
+                target: target,
+                lineStyle: { type: "solid" },
+              });
             }
           }
 
@@ -105,6 +104,7 @@
             tooltip: {},
             animation: false,
             series: [
+              //角色文字标题
               {
                 type: "graph",
                 layout: "force",
@@ -139,6 +139,7 @@
                 /\n/g,
                 "<br>"
               );
+              const category = params.data.category;
               const Poetry = params.data.Poetry.replace(/\n/g, "<br>");
 
               // 找到对应角色的 pic_key
@@ -147,22 +148,22 @@
               );
 
               Swal.fire({
-                title: params.data.name,
+                title: `"${params.data.name}[${category}]"`,
                 html: `
-        <div style="display: flex; align-items: flex-start;">
-          <div style="display: flex; flex-direction: column; margin-right: 10px;">
-            <img src="https://raw.githubusercontent.com/arthurfsy2/yingshentu/refs/heads/main/result_comp/${pic_key}_${params.data.name}.png" style="height: 350px; margin-bottom: 20px;" />
-            <div id="relationChart" style="height: 400px; width: 100%; border: 2px dashed rgba(128, 128, 128, 0.5);"></div>
-          </div>
-          <div style="max-height: 580px; overflow-y: auto; width: 500px; text-align: left; padding: 20px; background-color: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <div style=fontFamily = "'Microsoft YaHei', 'SimSun', 'SimHei', sans-serif";, sans-serif; font-size: 16px; line-height: 1.6; color: #333;">
-              <div style="font-style: italic; color: #6c757d; margin-bottom: 20px; font-size: 25px;">${Poetry}</div>
-              <hr style="border: 0; height: 1px; background-color: #ccc; margin: 10px 0;">
-              ${formattedDescription}
-            </div>
-          </div>
-        </div>
-      `,
+                        <div style="display: flex; align-items: flex-start;">
+                            <div style="display: flex; flex-direction: column; margin-right: 10px;">
+                                <img src="https://raw.githubusercontent.com/arthurfsy2/yingshentu/refs/heads/main/result_comp/${pic_key}_${params.data.name}.png" style="height: 350px; margin-bottom: 20px;" />
+                                <div id="relationChart" style="height: 400px; width: 100%; border: 2px dashed rgba(128, 128, 128, 0.5);"></div>
+                            </div>
+                            <div style="max-height: 580px; overflow-y: auto; width: 500px; text-align: left; padding: 20px; background-color: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                                <div style=fontFamily = "'Microsoft YaHei', 'SimSun', 'SimHei', sans-serif";, sans-serif; font-size: 16px; line-height: 1.6; color: #333;">
+                                    <div style="font-style: italic; color: #6c757d; margin-bottom: 20px; font-size: 25px;">${Poetry}</div>
+                                    <hr style="border: 0; height: 1px; background-color: #ccc; margin: 10px 0;">
+                                    ${formattedDescription}
+                                </div>
+                            </div>
+                        </div>
+                        `,
 
                 confirmButtonText: "关闭",
                 width: "800px",
@@ -238,8 +239,9 @@
                   const relationChart = echarts.init(relationChartDom);
 
                   const relationOption = {
+                    //控制alert的echarts
                     title: {
-                      text: `${params.data.name} 的人物关系图`,
+                      text: `${params.data.name}`,
                       left: "center",
                     },
                     series: [
