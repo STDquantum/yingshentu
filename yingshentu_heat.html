@@ -10,7 +10,6 @@
       href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css"
     />
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <script src="https://unpkg.com/compromise@13.11.0/builds/compromise.min.js"></script>
     <script src="https://d3js.org/d3.v6.min.js"></script>
     <style>
       /* 设置图表容器宽度为100% */
@@ -23,7 +22,8 @@
   <body>
     <div id="main"></div>
     <script>
-      const url = "yingshentu_with_heat.json"; // 本地文件路径
+      const url =
+        "https://raw.githubusercontent.com/arthurfsy2/yingshentu/refs/heads/main/yingshentu_with_heat.json"; // 本地文件路径
 
       fetch(url)
         .then((response) => response.json())
@@ -34,23 +34,14 @@
           // 假设热度值在数据中范围是 0-100
           const colorScale = d3
             .scaleLinear()
-            .domain([0, 10]) // 假设热度值范围
+            .domain([0, 15]) // 假设热度值范围
             .range(["green", "red"]); // 从绿色到红色渐变
-
-          // 计算角色出现次数
-          const occurrenceCount = {};
-
-          // 初始化每个角色的计数为 0
-          for (const key in data) {
-            const name = data[key].Name;
-            occurrenceCount[name] = data[key].Heat; // 使用热度值
-          }
 
           // 遍历角色，构建节点和边
           for (const key in data) {
             const name = data[key].Name;
             const description = data[key].UnitStory || "无介绍"; // 假设有一个描述字段
-            const heat = occurrenceCount[name]; // 使用出现次数作为热度值
+            const heat = data[key].heat; // 使用热度值
             nodes.push({
               name,
               description,
@@ -58,10 +49,39 @@
                 color: colorScale(heat), // 根据热度值设置颜色
               },
             });
+          }
 
-            for (const otherKey in data) {
-              if (otherKey !== key && data[otherKey].UnitStory.includes(name)) {
-                links.push({ source: name, target: data[otherKey].Name });
+          // 根据 related_to 和 related_from 构建边
+          for (const key in data) {
+            const currentName = data[key].Name;
+            const relatedTo = Array.isArray(data[key].related_to)
+              ? data[key].related_to
+              : []; // 确保是数组
+            const relatedFrom = Array.isArray(data[key].related_from)
+              ? data[key].related_from
+              : []; // 确保是数组
+
+            // 单向箭头（指向）
+            for (const target of relatedTo) {
+              links.push({
+                source: currentName,
+                target: target,
+                lineStyle: { type: "solid" },
+              });
+            }
+
+            // 双向箭头（彼此提及）
+            for (const target of relatedFrom) {
+              if (
+                data[target] &&
+                Array.isArray(data[target].related_to) &&
+                data[target].related_to.includes(currentName)
+              ) {
+                links.push({
+                  source: currentName,
+                  target: target,
+                  lineStyle: { type: "solid" },
+                });
               }
             }
           }
@@ -121,11 +141,11 @@
               Swal.fire({
                 title: params.data.name,
                 html: `
-                        <div style="display: flex; align-items: flex-start;">
-                            <img src="https://raw.githubusercontent.com/STDquantum/yingshentu/refs/heads/main/result_comp/${pic_key}_${params.data.name}.png" style="height: 350px; margin-right: 10px;" />
-                            <div style="max-height: 300px; overflow-y: auto; width: 500px; text-align: left;">${formattedDescription}</div>
-                        </div>
-                    `,
+                                <div style="display: flex; align-items: flex-start;">
+                                    <img src="https://raw.githubusercontent.com/arthurfsy2/yingshentu/refs/heads/main/result_comp/${pic_key}_${params.data.name}.png" style="height: 350px; margin-right: 10px;" />
+                                    <div style="max-height: 300px; overflow-y: auto; width: 500px; text-align: left;">${formattedDescription}</div>
+                                </div>
+                            `,
                 confirmButtonText: "关闭",
                 width: "800px",
               });
