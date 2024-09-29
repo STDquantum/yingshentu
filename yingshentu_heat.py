@@ -23,7 +23,17 @@ rename_mapping = {
     
 }
 
-# 读取 JSON 文件
+# 读取角色 JSON 文件
+with open('category.json', 'r', encoding='utf-8') as f:
+    roles_data = json.load(f)
+
+# 创建角色名称到分类的映射
+role_mapping = {}
+for category, names in roles_data.items():
+    for name in names:
+        role_mapping[name] = category
+
+# 读取 yingshentu.json 文件
 with open('yingshentu.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 
@@ -88,8 +98,28 @@ print("Heat > 1 的角色名称及其 heat 值:")
 for name, heat in sorted_heat:
     print(f"{name}: {heat}")
 
+
+
+# 为每个角色添加 role 字段
+for key, value in data.items():
+    name = value["Name"]
+    # 找到对应的 role
+    value["category"] = role_mapping.get(name, None)
+
+for key, value in data.items():
+    category = value["category"]
+    if not category:
+        print(value["Name"])
+        
+
 # 输出到新的 JSON 文件
 with open('yingshentu_with_heat.json', 'w', encoding='utf-8') as f:
     json.dump(data, f, ensure_ascii=False, indent=4)
 
 print("处理完成，结果已保存到 'yingshentu_with_heat.json'。")
+
+# # 输出到新的 JSON 文件
+# with open('yingshentu_with_heat.json', 'w', encoding='utf-8') as f:
+#     json.dump(data, f, ensure_ascii=False, indent=4)
+
+# print("处理完成，结果已保存到 'yingshentu_with_heat.json'。")
