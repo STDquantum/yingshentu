@@ -46,9 +46,11 @@
           for (const key in data) {
             const name = data[key].Name;
             const description = data[key].UnitStory || "无介绍"; // 假设有一个描述字段
+            const Poetry = data[key].Poetry;
             const heat = data[key].heat; // 使用热度值
             nodes.push({
               name,
+              Poetry,
               description,
               itemStyle: {
                 color: colorScale(heat), // 根据热度值设置颜色
@@ -137,6 +139,7 @@
                 /\n/g,
                 "<br>"
               );
+              const Poetry = params.data.Poetry.replace(/\n/g, "<br>");
 
               // 找到对应角色的 pic_key
               const pic_key = Object.keys(data).find(
@@ -146,18 +149,20 @@
               Swal.fire({
                 title: params.data.name,
                 html: `
-    <div style="display: flex; align-items: flex-start;">
-      <div style="display: flex; flex-direction: column; margin-right: 10px;">
-        <img src="https://raw.githubusercontent.com/arthurfsy2/yingshentu/refs/heads/main/result_comp/${pic_key}_${params.data.name}.png" style="height: 350px; margin-bottom: 20px;" />
-        <div id="relationChart" style="height: 400px; width: 100%; border: 2px dashed rgba(128, 128, 128, 0.5);"></div>
-      </div>
-      <div style="max-height: 580px; overflow-y: auto; width: 500px; text-align: left; padding: 20px; background-color: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-        <div style=fontFamily = "'Microsoft YaHei', 'SimSun', 'SimHei', sans-serif";, sans-serif; font-size: 16px; line-height: 1.6; color: #333;">
-          ${formattedDescription}
+        <div style="display: flex; align-items: flex-start;">
+          <div style="display: flex; flex-direction: column; margin-right: 10px;">
+            <img src="https://raw.githubusercontent.com/arthurfsy2/yingshentu/refs/heads/main/result_comp/${pic_key}_${params.data.name}.png" style="height: 350px; margin-bottom: 20px;" />
+            <div id="relationChart" style="height: 400px; width: 100%; border: 2px dashed rgba(128, 128, 128, 0.5);"></div>
+          </div>
+          <div style="max-height: 580px; overflow-y: auto; width: 500px; text-align: left; padding: 20px; background-color: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <div style=fontFamily = "'Microsoft YaHei', 'SimSun', 'SimHei', sans-serif";, sans-serif; font-size: 16px; line-height: 1.6; color: #333;">
+              <div style="font-style: italic; color: #6c757d; margin-bottom: 20px; font-size: 25px;">${Poetry}</div>
+              <hr style="border: 0; height: 1px; background-color: #ccc; margin: 10px 0;">
+              ${formattedDescription}
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  `,
+      `,
 
                 confirmButtonText: "关闭",
                 width: "800px",
