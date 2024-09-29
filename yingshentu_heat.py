@@ -1,4 +1,5 @@
 import json
+from pypinyin import pinyin, lazy_pinyin
 
 # 定义例外处理
 name_mapping = {
@@ -13,7 +14,9 @@ name_mapping = {
 
 # 新增重命名映射
 rename_mapping = {
-    "不能": ["二师兄不能"]
+    "不能": ["二师兄不能"],
+    "地狼": ["地狼地狼"], # 避免夜叉王问题
+    "铁扇公主": ["师姐"]
 }
 
 # 读取 JSON 文件
@@ -45,16 +48,29 @@ for key, value in data.items():
 
             # 检查 UnitStory 是否包含其他名称
             if any(name in unit_story for name in [other_name] + name_mapping.get(other_name, [])):
-                value["related_to"].append(other_name)
+                # 在 related_to 中添加重命名后的名称
+                if other_name in rename_mapping:
+                    other_name_renamed = rename_mapping[other_name][0]
+                    if other_name_renamed in unit_story:
+                        value["related_to"].append(other_name)
+                else:
+                    # 如果没有在 rename_mapping 中，使用原始名称进行匹配
+                    value["related_to"].append(other_name)
 
             # 使用重命名名称进行匹配
             if any(name in other_value["UnitStory"] for name in renamed_current_names):
                 value["related_from"].append(other_name)
 
-# 去重
+            # 检查重命名映射以添加相关角色
+            for renamed_name in rename_mapping.get(other_name, []):
+                if renamed_name in unit_story:
+                    value["related_to"].append(other_name)
+
+# 去重并排序
 for key, value in data.items():
-    value["related_from"] = list(set(value["related_from"]))
-    value["related_to"] = list(set(value["related_to"]))
+    value["related_from"] = sorted(set(value["related_from"]), key=lazy_pinyin)
+    value["related_to"] = sorted(set(value["related_to"]), key=lazy_pinyin)
+
 
 # 计算 heat
 for key, value in data.items():
