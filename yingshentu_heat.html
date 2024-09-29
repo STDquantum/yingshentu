@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="https://bkimg.cdn.bcebos.com/pic/11385343fbf2b2119313f3c7c2d972380cd7902320bb?x-bce-process=image/format,f_auto/watermark,image_d2F0ZXIvYmFpa2UyNzI,g_7,xp_5,yp_5,P_20/resize,m_lfit,limit_1,h_1080"
+    />
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>《黑神话：悟空》角色关系图</title>
@@ -141,13 +146,113 @@
               Swal.fire({
                 title: params.data.name,
                 html: `
-                                <div style="display: flex; align-items: flex-start;">
-                                    <img src="https://raw.githubusercontent.com/arthurfsy2/yingshentu/refs/heads/main/result_comp/${pic_key}_${params.data.name}.png" style="height: 350px; margin-right: 10px;" />
-                                    <div style="max-height: 300px; overflow-y: auto; width: 500px; text-align: left;">${formattedDescription}</div>
-                                </div>
-                            `,
+    <div style="display: flex; align-items: flex-start;">
+      <div style="display: flex; flex-direction: column; margin-right: 10px;">
+        <img src="https://raw.githubusercontent.com/arthurfsy2/yingshentu/refs/heads/main/result_comp/${pic_key}_${params.data.name}.png" style="height: 350px; margin-bottom: 20px;" />
+        <div id="relationChart" style="height: 400px; width: 100%; border: 2px dashed rgba(128, 128, 128, 0.5);"></div>
+      </div>
+      <div style="max-height: 580px; overflow-y: auto; width: 500px; text-align: left; padding: 20px; background-color: #f8f9fa; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div style=fontFamily = "'Microsoft YaHei', 'SimSun', 'SimHei', sans-serif";, sans-serif; font-size: 16px; line-height: 1.6; color: #333;">
+          ${formattedDescription}
+        </div>
+      </div>
+    </div>
+  `,
+
                 confirmButtonText: "关闭",
                 width: "800px",
+                didOpen: () => {
+                  const relationChartDom =
+                    document.getElementById("relationChart");
+
+                  // 设置外边框和样式
+                  relationChartDom.style.border =
+                    "2px dashed rgba(128, 128, 128, 0.5)"; // 设置边框
+                  relationChartDom.style.borderRadius = "5px"; // 圆角
+                  relationChartDom.style.padding = "10px"; // 内边距
+                  relationChartDom.style.width = "200px"; // 调整宽度
+                  relationChartDom.style.height = "200px"; // 调整高度
+                  relationChartDom.style.margin = "0 auto"; // 居中显示
+
+                  const relationNodes = [];
+                  const relationLinks = [];
+                  const nodeSet = new Set();
+
+                  // 获取当前角色的关系
+                  const currentRelations = data[pic_key];
+
+                  // 构建关系图的节点和边
+                  if (currentRelations) {
+                    const relatedTo = currentRelations.related_to || [];
+                    const relatedFrom = currentRelations.related_from || [];
+
+                    // 添加当前角色
+                    if (!nodeSet.has(currentRelations.Name)) {
+                      relationNodes.push({
+                        name: currentRelations.Name,
+                        itemStyle: { color: "blue" }, // 自定义颜色
+                      });
+                      nodeSet.add(currentRelations.Name);
+                    }
+
+                    // 添加相关角色
+                    relatedTo.forEach((target) => {
+                      if (!nodeSet.has(target)) {
+                        relationNodes.push({ name: target });
+                        nodeSet.add(target);
+                      }
+                      relationLinks.push({
+                        source: currentRelations.Name,
+                        target: target,
+                      });
+                    });
+
+                    relatedFrom.forEach((target) => {
+                      if (!nodeSet.has(target)) {
+                        relationNodes.push({ name: target });
+                        nodeSet.add(target);
+                      }
+                      relationLinks.push({
+                        source: currentRelations.Name,
+                        target: target,
+                      });
+                    });
+                  }
+
+                  // 打印调试信息
+                  console.log("Relation Nodes:", relationNodes);
+                  console.log("Relation Links:", relationLinks);
+
+                  // 确保数据结构正确
+                  if (relationNodes.length === 0) {
+                    console.error("No relation nodes found.");
+                    return;
+                  }
+
+                  // 初始化 ECharts
+                  const relationChart = echarts.init(relationChartDom);
+
+                  const relationOption = {
+                    title: {
+                      text: `${params.data.name} 的人物关系图`,
+                      left: "center",
+                    },
+                    series: [
+                      {
+                        type: "graph",
+                        layout: "force",
+                        data: relationNodes,
+                        links: relationLinks,
+                        roam: true,
+                        label: { show: true, position: "inside" },
+                        force: { repulsion: 100 },
+                        lineStyle: { color: "source", curveness: 0 },
+                      },
+                    ],
+                  };
+
+                  relationChart.setOption(relationOption);
+                },
               });
             }
           });
