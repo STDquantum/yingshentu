@@ -1,38 +1,21 @@
 import json
 from pypinyin import pinyin, lazy_pinyin
 
+def load_mappings(file_path):
+    with open(file_path, 'r',encoding="utf-8") as file:
+        data = json.load(file)
+    return data
+
+# 加载数据
+mappings = load_mappings('name_mappings.json')
+
 # 别名映射
-name_mapping = {
-    "二郎显圣真君": ["二郎神","真君"],
-    "猪八戒": ["八戒","天蓬元帅"],
-    "大圣残躯": ["悟空", "斗战神佛", "齐天大圣", "石猴", "行者"],
-    "魔将·妙音": ["一将"],
-    "魔将·劫波": ["四将"],
-    "魔将·妄相": ["三将"],
-    "魔将·莲眼": ["二将"],
-    "铁扇公主": ["师姐","铁扇仙","罗刹女","王女"],
-    "急如火、快如风": ["急如火","快如风"],
-    "云里雾、雾里云": ["云里雾、雾里云"],
-    "弥勒": ["小沙弥"],
-    "疯虎": ["虎弟","虎神"],
-    "虎先锋": ["虎兄"],
-    "寅虎": ["猛虎一头"],
-    "申猴": ["瘦猴一个"],
-    "戌狗": ["赖狗一只"],
-    "辰龙": ["老龙一条"],
-    "黄眉": ["寺庙的院主"],
-    "百目真人": ["黄花观观主"]
-}
+name_mapping = mappings['name_mapping']
 
 # 名称改名（避免歧义）
-rename_mapping = {
-    "不能": ["二师兄不能"],
-    "地狼": ["地狼地狼"], # 避免夜叉王问题
-    "“虎先锋”": ["前任虎先锋"], # 避免夜叉王问题
-    
-}
+rename_mapping = mappings['rename_mapping']
 
-# 读取角色 JSON 文件
+# 读取角色分类 JSON 文件
 with open('category.json', 'r', encoding='utf-8') as f:
     roles_data = json.load(f)
 
