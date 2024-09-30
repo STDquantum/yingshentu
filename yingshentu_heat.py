@@ -105,9 +105,12 @@ for key, value in data.items():
         
 
 # 输出到新的 JSON 文件
-with open('yingshentu_with_heat.json', 'w', encoding='utf-8') as f:
+yingshentu_with_heat_path1 = 'yingshentu_with_heat.json'
+with open(yingshentu_with_heat_path1, 'w', encoding='utf-8') as f:
     json.dump(data, f, ensure_ascii=False, indent=4)
-
+# yingshentu_with_heat_path2 = r'\\Family_4A1801\FamilyDoc\个人建站\public\black-wukong-youji\yingshentu_with_heat.json'
+# with open(yingshentu_with_heat_path2, 'w', encoding='utf-8') as f:
+#     json.dump(data, f, ensure_ascii=False, indent=4)
 print("处理完成，结果已保存到 'yingshentu_with_heat.json'。")
 
 # # 输出到新的 JSON 文件
