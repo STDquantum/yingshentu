@@ -1,5 +1,7 @@
 # 影神图
 
+[《黑神话：悟空》角色关系图](https://stdquantum.github.io/yingshentu/yingshentu_heat.html)
+
 [TOC]
 
 ## 狼斥候
