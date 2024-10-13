@@ -73,6 +73,7 @@ def combine():
 
 def export():
     md_text = "# 影神图\n\n"
+    md_text += "[《黑神话：悟空》角色关系图](https://stdquantum.github.io/yingshentu/yingshentu_heat.html)\n\n"
     md_text += "[TOC]\n\n"
     for uid in data_keys:
         md_text += f"## {data[uid]['Name']}\n\n"
